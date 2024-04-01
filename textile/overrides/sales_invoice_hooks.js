@@ -13,21 +13,21 @@ frappe.ui.form.on("Sales Invoice", {
 		frm.add_custom_button(__('Check Pretreatment Rate'), () => textile.show_pretreatment_pricing_dialog(frm.doc.customer),
 			__("Prices"));
 
-		frm.add_custom_button(__('Pretreatment Order'), function() {
-			textile.get_items_from_pretreatment_order(
-				frm,
-				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_invoice",
-				null,
-				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.get_pretreatment_orders_to_be_billed"
-			);
-		}, __("Get Items From"));
-
 		frm.add_custom_button(__('Print Order'), function() {
 			textile.get_items_from_print_order(
 				frm,
 				"textile.fabric_printing.doctype.print_order.print_order.make_sales_invoice",
 				null,
 				"textile.fabric_printing.doctype.print_order.print_order.get_print_orders_to_be_billed"
+			);
+		}, __("Get Items From"));
+
+		frm.add_custom_button(__('Pretreatment Order'), function() {
+			textile.get_items_from_pretreatment_order(
+				frm,
+				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.make_sales_invoice",
+				null,
+				"textile.fabric_pretreatment.doctype.pretreatment_order.pretreatment_order.get_pretreatment_orders_to_be_billed"
 			);
 		}, __("Get Items From"));
 	},

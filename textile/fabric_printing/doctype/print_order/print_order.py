@@ -1409,14 +1409,13 @@ def make_sales_invoice(source_name, target_doc=None):
 
 	dn_items = frappe.get_all("Delivery Note Item", filters={"print_order": doc.name}, fields=["name", "parent"])
 	dn_names = list(set([d.parent for d in dn_items]))
-	if not dn_names:
-		frappe.throw(_("There are no Delivery Notes to be delivered"))
 
-	frappe.flags.selected_children = {"items": [d.name for d in dn_items]}
+	if dn_names:
+		frappe.flags.selected_children = {"items": [d.name for d in dn_items]}
 
-	delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
-	for d in delivery_notes:
-		target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
+		delivery_notes = _get_delivery_notes_to_be_billed(filters={"name": ["in", dn_names]})
+		for d in delivery_notes:
+			target_doc = invoice_from_delivery_note(d.name, target_doc=target_doc)
 
 	return target_doc
 
@@ -1637,16 +1636,15 @@ def _get_print_orders_to_be_billed(doctype="Print Order", txt="", searchfield="n
 		from `tabPrint Order`
 		where `tabPrint Order`.docstatus = 1
 			and `tabPrint Order`.`{key}` like {txt}
-			and ((`tabPrint Order`.delivery_status = 'Delivered' and exists(
-					select dn.name
-					from `tabDelivery Note Item` dni
-					inner join `tabDelivery Note` dn on dn.name = dni.parent
-					where dni.print_order = `tabPrint Order`.name
-						and dn.docstatus = 1
-						and dn.status not in ('Closed', 'On Hold')
-						and dn.billing_status = 'To Bill'
-						and dni.qty > dni.billed_qty + dni.returned_qty
-				))
+			and exists(
+				select dn.name
+				from `tabDelivery Note Item` dni
+				inner join `tabDelivery Note` dn on dn.name = dni.parent
+				where dni.print_order = `tabPrint Order`.name
+					and dn.docstatus = 1
+					and dn.status not in ('Closed', 'On Hold')
+					and dn.billing_status = 'To Bill'
+					and dni.qty > dni.billed_qty + dni.returned_qty
 			)
 			{fcond} {mcond}
 		order by `tabPrint Order`.transaction_date, `tabPrint Order`.creation
