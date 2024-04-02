@@ -1166,7 +1166,7 @@ def start_print_order(print_order, fabric_transfer_qty=None):
 
 	frappe.has_permission('Print Order', 'write', throw=True)
 
-	doc = frappe.get_doc('Print Order', print_order)
+	doc = frappe.get_doc('Print Order', print_order, for_update=True)
 
 	if doc.docstatus != 1:
 		frappe.throw(_("Print Order {0} is not submitted").format(doc.name))

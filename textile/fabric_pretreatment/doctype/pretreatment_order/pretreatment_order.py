@@ -944,7 +944,7 @@ def update_status(pretreatment_order, status):
 def start_pretreatment_order(pretreatment_order):
 	frappe.has_permission("Pretreatment Order", "write", throw=True)
 
-	doc = frappe.get_doc('Pretreatment Order', pretreatment_order)
+	doc = frappe.get_doc('Pretreatment Order', pretreatment_order, for_update=True)
 
 	if doc.docstatus != 1:
 		frappe.throw(_("Pretreatment Order {0} is not submitted").format(doc.name))
