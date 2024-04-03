@@ -129,6 +129,18 @@ def update_packing_slip_from_sales_order_mapper(mapper, target_doctype):
 	mapper["postprocess"] = postprocess
 
 
+def update_unpack_from_packing_slip_mapper(mapper):
+	if not mapper.get("Packing Slip Item"):
+		return
+
+	field_map = mapper["Packing Slip Item"]["field_map"]
+
+	field_map["pretreatment_order"] = "pretreatment_order"
+
+	field_map["print_order"] = "print_order"
+	field_map["print_order_item"] = "print_order_item"
+
+
 def override_packing_slip_dashboard(data):
 	from textile.utils import override_sales_transaction_dashboard
 	return override_sales_transaction_dashboard(data)
