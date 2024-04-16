@@ -21,7 +21,6 @@
   "default_coating_fg_warehouse",
   "column_break_s3mwh",
   "default_printing_fg_warehouse",
-  "default_scrap_warehouse",
   "stock_entry_type_section",
   "stock_entry_type_for_fabric_transfer",
   "column_break_x00kc",
@@ -137,18 +136,12 @@
    "fieldtype": "Link",
    "label": "Default Coating Cost Center",
    "options": "Cost Center"
-  },
-  {
-   "fieldname": "default_scrap_warehouse",
-   "fieldtype": "Link",
-   "label": "Default Scrap Warehouse",
-   "options": "Warehouse"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-04-15 16:30:32.495541",
+ "modified": "2024-03-14 15:34:10.806362",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing Settings",

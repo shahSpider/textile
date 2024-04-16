@@ -246,7 +246,7 @@
    "hidden": 0,
    "is_query_report": 0,
    "label": "Reports",
-   "link_count": 7,
+   "link_count": 6,
    "onboard": 0,
    "type": "Card Break"
   },
@@ -302,16 +302,6 @@
   },
   {
    "hidden": 0,
-   "is_query_report": 1,
-   "label": "Fabric Ledger",
-   "link_count": 0,
-   "link_to": "Fabric Ledger",
-   "link_type": "Report",
-   "onboard": 0,
-   "type": "Link"
-  },
-  {
-   "hidden": 0,
    "is_query_report": 0,
    "label": "Textile Email Digest",
    "link_count": 0,
@@ -321,7 +311,7 @@
    "type": "Link"
   }
  ],
- "modified": "2024-04-15 16:45:58.995347",
+ "modified": "2024-03-15 14:16:45.810642",
  "modified_by": "Administrator",
  "module": "Fabric Printing",
  "name": "Fabric Printing",

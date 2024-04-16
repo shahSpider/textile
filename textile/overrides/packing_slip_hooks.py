@@ -15,23 +15,10 @@ class PackingSlipDP(PackingSlip):
 	def set_missing_values(self, for_validate=False):
 		super().set_missing_values(for_validate=for_validate)
 		self.set_is_return_fabric()
-		super().calculate_totals()
-		self.total_rejected_qty = 0
-		for item in self.items:
-			self.total_rejected_qty += item.rejected_qty
 
-
-	def on_submit(self):
-		self.make_stock_entry_for_rejected_items()
-	
-	def on_cancel(self):
-		self.cancel_linked_stock_entries()
-	
 	def set_is_return_fabric(self):
 		for d in self.items:
 			d.is_return_fabric = is_row_return_fabric(self, d)
-			if d.is_return_fabric:
-				d.rejected_qty = 0
 
 	def validate_with_previous_doc(self):
 		super().validate_with_previous_doc()
@@ -116,41 +103,6 @@ class PackingSlipDP(PackingSlip):
 	def calculate_totals(self):
 		super().calculate_totals()
 		calculate_panel_qty(self)
-	
-	def make_stock_entry_for_rejected_items(self):
-		ste = frappe.new_doc("Stock Entry")
-		ste.packing_slip = self.name
-		ste.stock_entry_type = "Rejected Fabric"
-		ste.posting_date = self.posting_date
-		ste.posting_time = self.posting_time
-		ste.project = self.project
-		ste.cost_center = self.cost_center
-		ste.customer = self.customer
-		ste.from_warehouse = self.default_source_warehouse
-		target_warehouse = frappe.db.get_default("default_scrap_warehouse")
-		ste.to_warehouse = target_warehouse
-		ste.items = []
-		for item in self.items:
-			row = frappe._dict()
-			row.item_code = item.item_code
-			row.item_name = item.item_name
-			row.qty = item.rejected_qty
-			row.uom = item.uom
-			row.conversion_factor = item.conversion_factor
-			row.stock_qty = item.stock_qty
-			row.stock_uom = item.stock_uom
-			row.s_warehouse = item.source_warehouse
-			row.t_warehouse = target_warehouse
-			ste.append("items", row)
-		ste.insert()
-		ste.submit()
-	
-	def cancel_linked_stock_entries(self):
-		for ste in frappe.db.get_list('Stock Entry', filters = {'packing_slip': self.name}, pluck='name'):
-			ste_doc = frappe.get_doc("Stock Entry", ste)
-			ste_doc.cancel()
-			ste_doc.delete()
-
 
 
 def update_packing_slip_mapper(item_mapper, source_doctype):
@@ -192,4 +144,3 @@ def update_unpack_from_packing_slip_mapper(mapper):
 def override_packing_slip_dashboard(data):
 	from textile.utils import override_sales_transaction_dashboard
 	return override_sales_transaction_dashboard(data)
-

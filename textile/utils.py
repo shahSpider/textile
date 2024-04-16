@@ -123,11 +123,3 @@ def override_sales_transaction_dashboard(data):
 		})
 
 	return data
-
-
-@frappe.whitelist()
-def is_this_item_return_fabric(doc, row):
-	import json
-	doc = frappe._dict(json.loads(doc))
-	row = frappe._dict(json.loads(row))
-	return is_row_return_fabric(doc, row)
