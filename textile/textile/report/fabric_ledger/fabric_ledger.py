@@ -25,7 +25,7 @@ class FabricLedger:
 		data = frappe.db.sql("""
 			select 
 				sle.item_code, item.item_name, sle.warehouse, sle.posting_date as date, sle.voucher_type, sle.voucher_no,
-				sle.party_type, sle.party, sle.stock_uom as uom, sle.actual_qty, sle.qty_after_transaction
+				sle.party_type, sle.party, sle.stock_uom as uom, sle.actual_qty, sle.qty_after_transaction, ste.stock_entry_type
 				from `tabStock Ledger Entry` sle
 				inner join `tabStock Entry` ste on sle.voucher_no = ste.name
 				inner join `tabItem` item on sle.item_code=item.item_code
