@@ -3,12 +3,26 @@
 	.company-logo {
 		width: 2.5in !important;
 	}
+	.company-address {
+		padding-top: 30px;
+	}
+	.item-details {
+		padding-top: 20px;
+		font-weight: bold;
+	}
 	.title1 {
 		color: gray;
 	}
 
 	.heading-bold {
 		font-weight: bold;
+		font-size: 14px;
+	}
+	.prev-balance {
+		font-weight: bold;
+		font-size: 14px;
+		border: 1px solid black;
+		text-align: right;
 	}
 
 </style>
@@ -22,61 +36,97 @@
 					<img src="/assets/syntech_print/images/logo-full.png" class="company-logo" alt="" width="80%;">
 
 					<div class="company-address">
-					Syntech Fibres, 5-3-1 Sector 15, Korangi Industrial Area, Karachi-74900 
+					{{data[0].company_address_doc.address_title}}, {{data[0].company_address_doc.address_line1}}, {{data[0].company_address_doc.address_line2}}, {{data[0].company_address_doc.state}}-{{data[0].company_address_doc.pincode}} 
 					</div>
 
-					<div class="window-height">
-						<div class="party-address">
-							C40 Cotton Cambric
-							ITEM CODE
-						</div>
+					<div class="item-details">
+						{{filters.item_code}}<br>
+						ITEM CODE
 					</div>
 				</td>
 				<td style="width: 10%; padding: 0 !important;">
 
 				</td>
-				<td style="width: 45%; padding: 0 !important;">
+				<td style="width: 25%; padding: 0 !important;">
 					<h1 class="title1">Duraprints</h1>
 					<h1>Stock Ledger</h1>
-					<p>Date<br>02 MAY 2021</p>
+				</td>
+				<td style="width: 20%;"></td>
+			</tr>
+			<tr>
+				<td style="width: 45%; padding: 0 !important;"></td>
+				<td style="width: 10%; padding: 0 !important;"></td>
+				<td style="width: 25%; padding: 0 !important;"></td>
+				<td style="width: 20%;">
+					<table class="transaction-header">
+						<tbody>
+							<tr>
+								<td class="field-label" style="width: 20%">Date</td>
+								<td class="field-label" style="width: 4%">Page(s)</td>
+							</tr>
+							<tr>
+								<td class="field-value">{{  data[0].report_date }}</td>
+								<td class="field-value">
+								</td>
+							</tr>
+						</tbody>
+					</table>
 				</td>
 			</tr>
 		</table>
 	</div>
 </div>
+
 <!-- Body -->
 <div id="report-body">
-	<p class="heading-bold">Accounts statement from 01 May 2023 to 30 May 2023.</p>
+	<p class="heading-bold">Accounts statement from {{data[0].report_from_date}} to {{data[0].report_to_date}}.</p>
 	<table style="width: 100%;">
-		<tr>
+		<tr style="border-top: 1px solid black; border-bottom: 1px solid black;">
 			<th style="width: 10%;">Date</th>
 			<th style="width: 20%;">Reference</th>
-			<th style="width: 40%;">DESCRIPTION<br>Number / Narration</th>
-			<th style="width: 10%;">IN</th>
-			<th style="width: 10%;">OUT</th>
-			<th style="width: 10%;">BALANCE</th>
+			<th style="width: 30%;">DESCRIPTION<br>Number / Narration</th>
+			<th style="width: 12%; text-align: right;">IN</th>
+			<th style="width: 12%; text-align: right;">OUT</th>
+			<th style="width: 16%; text-align: right;">BALANCE</th>
 		</tr>
 
 		{% for(let i of data) { %}
 		<tr>
-			<td>{{i.date}}</td>
-			<td>{{i.voucher_no}}</td>
-			<td>{{i.stock_entry_type}}</td>
-			<td>{{i.in_qty}}</td>
-			<td>{{i.out_qty}}</td>
-			<td>{{i.qty_after_transaction}}</td>
+			<td style="width: 10%; text-align: left;">{{i.date}}</td>
+			<td style="width: 20%; text-align: left;">{{i.voucher_no}}</td>
+			<td style="width: 30%; text-align: left;">{{i.stock_entry_type}}</td>
+			<td style="width: 12%; text-align: right;">{{i.in_qty}}</td>
+			<td style="width: 12%; text-align: right;">{{i.out_qty}}</td>
+			<td style="width: 16%; text-align: right;">{{i.qty_after_transaction}}</td>
 		</tr>
 		{% } %}
+		<tr>
+			<td style="width: 10%; text-align: left;"></td>
+			<td style="width: 20%; text-align: left;"></td>
+			<td style="width: 30%; text-align: left;"></td>
+			<td style="width: 12%; text-align: right; font-weight: bold;">{{data[0].total_in_qty}}</td>
+			<td style="width: 12%; text-align: right; font-weight: bold;">{{data[0].total_out_qty}}</td>
+			<td style="width: 16%; text-align: right; font-weight: bold;">{{data[0].balance_qty}}</td>
+		</tr>
+		<tr>
+			<td></td>
+			<td></td>
+			<td></td>
+			<td colspan="2" class="prev-balance">
+				Previous Balance as of {{data[0].report_from_date}}
+			</td>
+			<td class="prev-balance">
+				{{data[0].previous_balance_qty}}
+			</td>
+		</tr>
 	</table>
-	<div>
-		Previous Balance as of 31.04.2023 0.0
-	</div>
 </div>
-
 
 
 <!-- Footer -->
 <div id="footer-html" class="visible-pdf" style="display: block !important; order: 1;">
-	Please raise objections to individual entries without delay, Incoming stock entries are subjected to incoming inspection and reconciliation. Process
-	wastage can be created at any stage of the production process. Fabric rejection is created during final quality inspection at packaging stage.
+	<div class="letter-head-footer">
+		Please raise objections to individual entries without delay, Incoming stock entries are subjected to incoming inspection and reconciliation. Process
+		wastage can be created at any stage of the production process. Fabric rejection is created during final quality inspection at packaging stage.
+	</div>
 </div>
