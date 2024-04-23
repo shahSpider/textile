@@ -1,13 +1,6 @@
 <!-- style here -->
 <style>
-	.company-logo {
-		width: 2.5in !important;
-	}
-	.company-address {
-		padding-top: 30px;
-	}
 	.item-details {
-		padding-top: 20px;
 		font-weight: bold;
 	}
 	.title1 {
@@ -28,53 +21,42 @@
 </style>
 
 <!-- Header -->
-<div id="header-html" class="hidden-pdf">
-	<div class="letter-head">
-		<table style="width: 100%">
-			<tr>
-				<td style="width: 45%; padding: 0 !important;">
-					<img src="/assets/syntech_print/images/logo-full.png" class="company-logo" alt="" width="80%;">
+<div>
+	<table style="width: 100%">
+		<tr>
+			<td style="width: 45%; padding: 20px 5px 20px 5px !important;">
+				<div class="item-details">
+					{{filters.item_code}}<br>
+					ITEM CODE
+				</div>
+			</td>
+			<td style="width: 10%; padding: 20px 5px 20px 5px !important;">
 
-					<div class="company-address">
-					{{data[0].company_address_doc.address_title}}, {{data[0].company_address_doc.address_line1}}, {{data[0].company_address_doc.address_line2}}, {{data[0].company_address_doc.state}}-{{data[0].company_address_doc.pincode}} 
-					</div>
-
-					<div class="item-details">
-						{{filters.item_code}}<br>
-						ITEM CODE
-					</div>
-				</td>
-				<td style="width: 10%; padding: 0 !important;">
-
-				</td>
-				<td style="width: 25%; padding: 0 !important;">
-					<h1 class="title1">Duraprints</h1>
-					<h1>Stock Ledger</h1>
-				</td>
-				<td style="width: 20%;"></td>
-			</tr>
-			<tr>
-				<td style="width: 45%; padding: 0 !important;"></td>
-				<td style="width: 10%; padding: 0 !important;"></td>
-				<td style="width: 25%; padding: 0 !important;"></td>
-				<td style="width: 20%;">
-					<table class="transaction-header">
-						<tbody>
-							<tr>
-								<td class="field-label" style="width: 20%">Date</td>
-								<td class="field-label" style="width: 4%">Page(s)</td>
-							</tr>
-							<tr>
-								<td class="field-value">{{  data[0].report_date }}</td>
-								<td class="field-value">
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</td>
-			</tr>
-		</table>
-	</div>
+			</td>
+			<td style="width: 25%; padding: 20px 5px 20px 5px !important;">
+				<h1>Stock Ledger</h1>
+			</td>
+			<td style="width: 20%;"></td>
+		</tr>
+		<tr>
+			<td style="width: 45%; padding: 0 !important;"></td>
+			<td style="width: 10%; padding: 0 !important;"></td>
+			<td style="width: 25%; padding: 0 !important;"></td>
+			<td style="width: 20%;">
+				<table style="width: 100%;">
+					<tbody>
+						<tr>
+							<td class="field-label" style="width: 100%">Date</td>
+						</tr>
+						<tr>
+							<td class="field-value">{{  data[0].report_date }}</td>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</td>
+		</tr>
+	</table>
 </div>
 
 <!-- Body -->
@@ -94,7 +76,7 @@
 		<tr>
 			<td style="width: 10%; text-align: left;">{{i.date}}</td>
 			<td style="width: 20%; text-align: left;">{{i.voucher_no}}</td>
-			<td style="width: 30%; text-align: left;">{{i.stock_entry_type}}</td>
+			<td style="width: 30%; text-align: left;">{{i.purpose}}</td>
 			<td style="width: 12%; text-align: right;">{{i.in_qty}}</td>
 			<td style="width: 12%; text-align: right;">{{i.out_qty}}</td>
 			<td style="width: 16%; text-align: right;">{{i.qty_after_transaction}}</td>
@@ -120,13 +102,4 @@
 			</td>
 		</tr>
 	</table>
-</div>
-
-
-<!-- Footer -->
-<div id="footer-html" class="visible-pdf" style="display: block !important; order: 1;">
-	<div class="letter-head-footer">
-		Please raise objections to individual entries without delay, Incoming stock entries are subjected to incoming inspection and reconciliation. Process
-		wastage can be created at any stage of the production process. Fabric rejection is created during final quality inspection at packaging stage.
-	</div>
 </div>
