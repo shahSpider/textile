@@ -43,8 +43,7 @@ class FabricLedger:
 					OR ((sle.voucher_type='Packing Slip') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1)
 					 and sle.warehouse = (select rejected_warehouse from `tabPacking Slip` where name=sle.voucher_no)) 
 					OR ((sle.voucher_type='Delivery Note') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1))) {conditions}
-				order by
-						sle.posting_date, sle.posting_time DESC limit 1
+				order by sle.posting_date DESC, sle.posting_time DESC, sle.creation DESC limit 1
 			""".format(conditions = balance_cond), as_dict=1)
 		
 		report_query = frappe.db.sql("""
@@ -53,24 +52,43 @@ class FabricLedger:
 				sle.party_type, sle.party, sle.stock_uom as uom, ROUND(IFNULL(sle.actual_qty, 0), 2) as actual_qty, IF(sle.actual_qty > 0, sle.actual_qty, 0) as in_qty,
 				IF(sle.actual_qty < 0, sle.actual_qty, 0) as out_qty, ROUND(IFNULL(sle.qty_after_transaction, 0), 2) as qty_after_transaction, 
 				IF(item.is_customer_provided_item=1, item.item_code, item.fabric_item) as fabric_item,
-				IF(item.is_customer_provided_item=1, item.item_name, item.fabric_item_name) as fabric_item_name
+				IF(item.is_customer_provided_item=1, item.item_name, item.fabric_item_name) as fabric_item_name,
+				ps.rejected_warehouse, psi.source_warehouse, psi.qty as packed_qty, psi.rejected_qty as rejected_qty
 				from `tabStock Ledger Entry` sle
-				inner join `tabItem` item on sle.item_code=item.item_code and item.fabric_item IS NOT NULL
+				inner join `tabItem` item on sle.item_code=item.item_code
+				left join `tabPacking Slip Item` psi on sle.voucher_no = psi.parent and sle.item_code = psi.item_code and psi.rejected_qty > 0
+				left join `tabPacking Slip` ps on psi.parent = ps.name
 				where sle.is_cancelled = 0 and
 					((((sle.voucher_type = 'Stock Entry') and ((SELECT stock_entry_type FROM `tabStock Entry` where name=sle.voucher_no) = 'Customer Fabric Receipt'))
 					OR (sle.voucher_type='Stock Reconciliation'))
 					OR ((sle.voucher_type='Packing Slip') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1)
-						 and sle.warehouse = (select rejected_warehouse from `tabPacking Slip` where name=sle.voucher_no))
+						)
 					OR ((sle.voucher_type='Delivery Note') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1))) {conditions}
-				order by
-						sle.posting_date, sle.posting_time
+				order by sle.posting_date DESC, sle.posting_time DESC, sle.creation DESC
 		""".format(conditions=conditions), as_dict=1)
-		
 		data.extend(previous_balance_qty)
 		
 		data_grouped_by_fabric_item = defaultdict(list)
+		rejected = ""
+		in_out = ""
 		for sle in report_query:
-			fabric_item_voucher_key = sle.fabric_item+sle.voucher_no
+			if sle.voucher_type == "Packing Slip":
+				rejected = "No"
+				in_out = "in"
+				if sle.actual_qty < 0:
+					in_out = "out"
+					if sle.voucher_type == "Packing Slip" and sle.rejected_qty:
+						sle.out_qty += sle.rejected_qty
+				
+				elif sle.voucher_type == "Packing Slip" and sle.rejected_qty and sle.actual_qty > 0 and sle.warehouse == sle.rejected_warehouse:
+					rejected = "Yes"
+					in_out = "out"
+					sle.warehouse = "Rejected Fabric"
+					sle.out_qty = -sle.in_qty
+					sle.in_qty = 0
+				else:
+					continue
+			fabric_item_voucher_key = sle.fabric_item + sle.voucher_no + sle.warehouse + rejected + in_out
 			data_grouped_by_fabric_item[fabric_item_voucher_key].append(sle)
 		
 		fabric_item_wise_map = [] 
@@ -89,7 +107,7 @@ class FabricLedger:
 			fabric_item_wise_map.append(row)
 
 		data.extend(fabric_item_wise_map)
-		
+		# data.extend(report_query)		
 		# some calculations and formatting of data required in print format
 		total_in_qty = 0
 		total_out_qty = 0
@@ -111,8 +129,9 @@ class FabricLedger:
 				"qty_after_transaction" : "{0:,.2f}".format(flt(d.get("qty_after_transaction"))),
 			}
 			d.update(entry_changes)
-		
-		balance_qty = flt(data[-1].get("qty_after_transaction", 0))
+		balance_qty = 0
+		if data:
+			balance_qty = flt(data[-1].get("qty_after_transaction", 0))
 		report_date = (frappe.utils.format_date(frappe.utils.getdate(), "d MMM y")).upper()
 		report_from_date = frappe.utils.format_date(self.filters.from_date, "dd MMM y")
 		report_to_date = frappe.utils.format_date(self.filters.to_date, "dd MMM y")
@@ -138,6 +157,10 @@ class FabricLedger:
 			conditions += " and sle.company = '%s'"%(filters.company)
 		if filters.get("customer"):
 			conditions += " and sle.party = '%s'"%(filters.customer)
+		if filters.get("voucher_type"):
+			conditions += " and sle.voucher_type = '%s'"%(filters.voucher_type)
+		if filters.get("voucher_no"):
+			conditions += " and sle.voucher_no = '%s'"%(filters.voucher_no)
 		if filters.get("item_code"):
 			conditions += " and IF(item.is_customer_provided_item=1, item.item_code, item.fabric_item) = '%s'"%(filters.item_code)
 		if filters.get("warehouse"):
@@ -153,6 +176,7 @@ class FabricLedger:
 			{"label": _("Item Code"), "fieldname": "item_code", "fieldtype": "Link", "options": "Item", "width": 200},
 			{"label": _("Item Name"), "fieldname": "item_name", "fieldtype": "Data", "width": 250, "hide_if_filtered": 1},
 			{"label": _("Warehouse"), "fieldname": "warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 200, "hide_if_filtered": 1},
+			# {"label": _("Source Warehouse"), "fieldname": "source_warehouse", "fieldtype": "Link", "options": "Warehouse", "width": 200, "hide_if_filtered": 1},
 			{"label": _("UOM"), "fieldname": "uom", "fieldtype": "Link", "options": "UOM", "width": 60},
 			{"label": _("In Qty"), "fieldname": "in_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
 			{"label": _("Out Qty"), "fieldname": "out_qty", "fieldtype": "Float", "width": 80, "convertible": "qty"},
