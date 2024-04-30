@@ -33,21 +33,6 @@ frappe.query_reports["Fabric Ledger"] = {
 			"options": "Customer"
 		},
 		{
-			"fieldname": "voucher_type",
-			"label": __("Voucher Type"),
-			"fieldtype": "Link",
-			"options": "DocType",
-			on_change: function() {
-				frappe.query_report.set_filter_value('party', "");
-			}
-		},
-		{
-			"fieldname": "voucher_no",
-			"label": __("Voucher No"),
-			"fieldtype": "DynamicLink",
-			"options": "voucher_type",
-		},
-		{
 			"fieldname":"item_code",
 			"label": __("Item"),
 			"fieldtype": "Link",
@@ -80,6 +65,21 @@ frappe.query_reports["Fabric Ledger"] = {
 			"label": __("Warehouse"),
 			"fieldtype": "Link",
 			"options": "Warehouse"
+		},
+		{
+			"fieldname": "voucher_type",
+			"label": __("Voucher Type"),
+			"fieldtype": "Select",
+			"options": ["", "Stock Entry", "Stock Reconciliation", "Packing Slip", "Delivery Note"],
+			on_change: function() {
+				frappe.query_report.set_filter_value('voucher_no', "");
+			}
+		},
+		{
+			"fieldname": "voucher_no",
+			"label": __("Voucher No"),
+			"fieldtype": "DynamicLink",
+			"options": "voucher_type",
 		}
 	],
 	
@@ -94,14 +94,6 @@ frappe.query_reports["Fabric Ledger"] = {
 				style['color'] = 'red';
 			}
 		});
-		// if (column.fieldname === 'actual_qty') {
-		// 	if (value < 0) {
-		// 		style['color'] = 'red';
-
-		// 	} else {
-		// 		style['color'] = 'green';
-		// 	}
-		// }
 	
 		return default_formatter(value, row, column, data, {css: style});
 	},
