@@ -40,7 +40,7 @@ frappe.query_reports["Fabric Ledger"] = {
 			"get_query": function() {
 				return {
 					query: "erpnext.controllers.queries.item_query",
-					filters: {'include_disabled': 1, "include_templates": 1, "textile_item_type": "Ready Fabric"}
+					filters: {'include_disabled': 1, "include_templates": 1, "textile_item_type": ["IN", ["Greige Fabric", "Ready Fabric", "Printed Design"]]}
 				}
 			},
 			on_change: function() {

@@ -40,34 +40,24 @@ class FabricLedger:
 		previous_balance_qty = frappe.db.sql(""" 
 			select "<b>Opening</b>" as voucher_type, sle.qty_after_transaction
 				from `tabStock Ledger Entry` sle
-				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.is_customer_provided_item=0 and item.fabric_item IS NULL)
-				where sle.is_cancelled = 0 and
-					((((sle.voucher_type = 'Stock Entry') and ((SELECT stock_entry_type FROM `tabStock Entry` where name=sle.voucher_no) = 'Customer Fabric Receipt'))
-					OR (sle.voucher_type = 'Stock Reconciliation'))
-					OR ((sle.voucher_type = 'Packing Slip') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1)
-						)
-					OR ((sle.voucher_type='Delivery Note') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1))) {conditions}
+				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.textile_item_type IS NULL OR item.textile_item_type = '') and item.textile_item_type not in ('Print Process', 'Process Component', 'Filter Cartridge', 'Filter Media', 'Filter Core', 'Filter End Adapter')
+				where sle.is_cancelled = 0 {conditions}
 				order by sle.posting_date DESC, sle.posting_time DESC, sle.creation DESC limit 1
 			""".format(conditions = balance_cond), as_dict=1)
 		
 		report_query = frappe.db.sql("""
 			select
 				sle.item_code, item.item_name, sle.warehouse, sle.posting_date as date, sle.voucher_type, sle.voucher_no,
-				sle.party_type, sle.party, sle.stock_uom as uom, ROUND(IFNULL(sle.actual_qty, 0), 2) as actual_qty, IF(sle.actual_qty > 0, sle.actual_qty, 0) as in_qty,
-				IF(sle.actual_qty < 0, sle.actual_qty, 0) as out_qty, ROUND(IFNULL(sle.qty_after_transaction, 0), 2) as qty_after_transaction, 
-				IF(item.is_customer_provided_item=1, item.item_code, item.fabric_item) as fabric_item,
-				IF(item.is_customer_provided_item=1, item.item_name, item.fabric_item_name) as fabric_item_name,
+				sle.party_type, sle.party, sle.stock_uom as uom, IFNULL(sle.actual_qty, 0) as actual_qty, IF(sle.actual_qty > 0, sle.actual_qty, 0) as in_qty,
+				IF(sle.actual_qty < 0, sle.actual_qty, 0) as out_qty, IFNULL(sle.qty_after_transaction, 0) as qty_after_transaction, 
+				IF(item.textile_item_type='Printed Design', item.fabric_item, item.item_code) as fabric_item,
+				IF(item.textile_item_type='Printed Design', item.fabric_item_name, item.item_name) as fabric_item_name,
 				ps.rejected_warehouse, psi.source_warehouse, psi.qty as packed_qty, psi.rejected_qty as rejected_qty
 				from `tabStock Ledger Entry` sle
-				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.is_customer_provided_item=0 and item.fabric_item IS NULL)
+				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.textile_item_type IS NULL OR item.textile_item_type = '') and item.textile_item_type not in ('Print Process', 'Process Component', 'Filter Cartridge', 'Filter Media', 'Filter Core', 'Filter End Adapter')
 				left join `tabPacking Slip Item` psi on sle.voucher_no = psi.parent and sle.item_code = psi.item_code and psi.rejected_qty > 0
 				left join `tabPacking Slip` ps on psi.parent = ps.name
-				where sle.is_cancelled = 0 and
-					((((sle.voucher_type = 'Stock Entry') and ((SELECT stock_entry_type FROM `tabStock Entry` where name=sle.voucher_no) = 'Customer Fabric Receipt'))
-					OR (sle.voucher_type='Stock Reconciliation'))
-					OR ((sle.voucher_type='Packing Slip') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1)
-						)
-					OR ((sle.voucher_type='Delivery Note') and ((select is_customer_provided_item FROM `tabItem` where name = item.fabric_item) = 1))) {conditions}
+				where sle.is_cancelled = 0 {conditions}
 				order by sle.posting_date ASC, sle.posting_time ASC, sle.creation ASC
 		""".format(conditions=conditions), as_dict=1)
 		
@@ -154,7 +144,7 @@ class FabricLedger:
 		if filters.get("customer"):
 			conditions += " and sle.party = '%s'"%(filters.customer)
 		if filters.get("item_code"):
-			conditions += " and IF(item.is_customer_provided_item=1, item.item_code, item.fabric_item) = '%s'"%(filters.item_code)
+			conditions += " and  '{item_code}' IN (SELECT item.item_code from `tabItem` where item_code='{item_code}' or fabric_item='{item_code}')".format(item_code=filters.item_code)
 		if filters.get("warehouse"):
 			conditions += " and sle.warehouse = '%s'"%(filters.warehouse)
 		return conditions
