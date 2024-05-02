@@ -41,7 +41,8 @@ class FabricLedger:
 			select "<b>Opening</b>" as voucher_type, sle.qty_after_transaction
 				from `tabStock Ledger Entry` sle
 				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.textile_item_type IS NULL OR item.textile_item_type = '') and item.textile_item_type not in ('Print Process', 'Process Component', 'Filter Cartridge', 'Filter Media', 'Filter Core', 'Filter End Adapter')
-				where sle.is_cancelled = 0 {conditions}
+				left join `tabStock Entry` ste on sle.voucher_type = "Stock Entry" and sle.voucher_no = ste.name
+				where sle.is_cancelled = 0  and ((ste.purpose IS NULL) OR (ste.purpose NOT IN ('Manufacture', 'Material Transfer for Manufacture', 'Material Consumption for Manufacture',  'Material Transfer'))) {conditions}
 				order by sle.posting_date DESC, sle.posting_time DESC, sle.creation DESC limit 1
 			""".format(conditions = balance_cond), as_dict=1)
 		
@@ -55,9 +56,10 @@ class FabricLedger:
 				ps.rejected_warehouse, psi.source_warehouse, psi.qty as packed_qty, psi.rejected_qty as rejected_qty
 				from `tabStock Ledger Entry` sle
 				inner join `tabItem` item on sle.item_code=item.item_code and NOT(item.textile_item_type IS NULL OR item.textile_item_type = '') and item.textile_item_type not in ('Print Process', 'Process Component', 'Filter Cartridge', 'Filter Media', 'Filter Core', 'Filter End Adapter')
+				left join `tabStock Entry` ste on sle.voucher_type = "Stock Entry" and sle.voucher_no = ste.name
 				left join `tabPacking Slip Item` psi on sle.voucher_no = psi.parent and sle.item_code = psi.item_code and psi.rejected_qty > 0
 				left join `tabPacking Slip` ps on psi.parent = ps.name
-				where sle.is_cancelled = 0 {conditions}
+				where sle.is_cancelled = 0 and ((ste.purpose IS NULL) OR (ste.purpose NOT IN ('Manufacture', 'Material Transfer for Manufacture', 'Material Consumption for Manufacture', 'Material Transfer'))) {conditions}
 				order by sle.posting_date ASC, sle.posting_time ASC, sle.creation ASC
 		""".format(conditions=conditions), as_dict=1)
 		
